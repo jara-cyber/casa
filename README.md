@@ -78,3 +78,11 @@ Documentación oficial:
 - https://supabase.com/docs/guides/auth/passwords
 - https://supabase.com/docs/guides/database/postgres/row-level-security
 - https://supabase.com/docs/guides/api/api-keys
+
+## Asistente en la esquina inferior derecha
+
+El botón «Pregúntale a Casa» abre un chat. El modo predeterminado **Consultas de Casa** no usa una IA: interpreta consultas de agenda, tareas, compras, menú y gastos, y responde a partir de registros actuales. Por ejemplo: «¿Qué tengo mañana?», «¿Qué falta por comprar?» o «Gastos de familia». Cada pregunta vuelve a consultar el servidor. No crea ni modifica registros y no responde con una copia antigua si falla la conexión.
+
+En los ajustes del chat puedes seleccionar **IA local · Ollama**, indicar un modelo local instalado y su dirección loopback, por defecto `http://localhost:11434`. Solo al preguntar envía a ese servicio la pregunta y los registros relacionados visibles para tu cuenta; no envía correos, claves ni contraseñas. El historial no se guarda y se borra al cerrar la sesión. Si falla Ollama, se muestra la consulta directa, identificada como tal. Las respuestas del modelo pueden contener errores.
+
+Para conectar Ollama, permite el origen exacto de la web con `OLLAMA_ORIGINS` y activa `OLLAMA_NO_CLOUD=1`; reinicia Ollama y conserva la escucha en localhost. Configuración documentada: https://docs.ollama.com/faq. El navegador puede bloquear o pedir permiso para conexiones locales. En un móvil, localhost apunta al móvil, no a tu PC. La conexión real depende de tener Ollama y el modelo ejecutándose en ese dispositivo; no se ha verificado con tu ordenador.
