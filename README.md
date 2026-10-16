@@ -30,18 +30,37 @@ La versión anterior en ChatGPT sigue siendo independiente. El archivo `render.y
 4. En Actions ejecuta **Publicar Casa en GitHub Pages**. El workflow comprueba configuración, pruebas y compilación antes de publicar. Los nuevos cambios en `main` se publicarán automáticamente.
 5. Abre la URL devuelta por el despliegue cuando termine correctamente. El workflow valida la configuración pública antes de compilar.
 
-## Administrador y miembros
+## Administrador y creación directa de cuentas
 
-1. En Casa pulsa **Crear una cuenta**, introduce tu correo y una contraseña propia y confirma el correo recibido.
-2. Inicia sesión y crea tu familia. Esa cuenta obtiene el rol **Administrador** automáticamente.
-3. En Familia, introduce nombre y correo de un familiar. Se genera un código de un uso que caduca en 7 días.
-4. Comparte personalmente la URL de Casa y el código con ese familiar. No se envían invitaciones por email desde la app.
-5. El familiar crea su cuenta en Casa con ese mismo correo, lo confirma y pulsa **Tengo una invitación**.
-6. Cada persona elige **Mi espacio** o **En familia**. Al guardar una tarea o cita decide entre **Solo yo** y **Toda la familia**.
+El administrador puede crear las cuentas de sus familiares desde **Familia → Crear cuenta**, con nombre, correo y una contraseña inicial de al menos 12 caracteres. No envía correo ni requiere que el familiar se registre o acepte una invitación. La web le pide cambiar la contraseña inicial al entrar. Ese aviso es un flujo de la interfaz, no una restricción de acceso impuesta por la base de datos.
 
-El administrador de la familia no recibe acceso a los registros privados ajenos a través de la app. Quien administra el proyecto Supabase sí mantiene acceso administrativo a su base de datos. Las contraseñas y sesiones las gestiona Supabase Auth.
+### Activación de la función de servidor (una vez)
 
-Todos pueden marcar tareas y productos compartidos como completados; solo quien creó el registro puede borrarlo. Las invitaciones están ligadas al correo confirmado de su destinatario. Un usuario no puede leer datos de otra familia.
+La clave pública no permite crear usuarios administrativamente. Para esta función hace falta desplegar una Edge Function en el mismo proyecto Supabase:
+
+1. En Supabase → Edge Functions → Deploy a new function → Via Editor, usa el nombre **create-member**.
+2. Pega el contenido completo de `supabase/functions/create-member/dashboard.ts` en el archivo de entrada del editor y despliega.
+3. En los ajustes de esa función desactiva **Verify JWT with legacy secret**. La función verifica obligatoriamente la sesión mediante Supabase Auth y comprueba el rol administrador en la base de datos antes de crear cuentas. No admite llamadas anónimas.
+4. Las variables `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY` las proporciona el entorno alojado de Supabase. No copies la clave de servidor en GitHub, el cliente ni el chat. También admite las nuevas `SUPABASE_SECRET_KEYS` del entorno.
+
+Alternativa con CLI ya autenticada:
+
+```sh
+supabase functions deploy create-member --project-ref djvvptophxqwqcadkahj --no-verify-jwt
+```
+
+`handler.ts` es el código probado. `index.ts` es la entrada para CLI. `dashboard.ts` contiene ambos en un archivo para copiar al editor. No hay cambios en las tablas ni es necesario ejecutar de nuevo `schema.sql`.
+
+### Uso
+
+1. El propietario crea su primera cuenta en Casa con **Crear una cuenta**, confirma su correo e inicia sesión.
+2. Al crear su familia, esa cuenta pasa a ser administradora. No hay contraseña admin predeterminada ni una cuenta ya provisionada desde este chat.
+3. En Familia crea las cuentas de los demás y comparte personalmente el enlace, correo y contraseña inicial.
+4. El familiar entra con su correo y contraseña inicial, elige una contraseña propia y ya pertenece a esa familia.
+
+La función elige siempre la familia del administrador autenticado y crea solo miembros normales. Rechaza correos que ya tienen cuenta: no cambia sus contraseñas ni los traslada a otra familia. Si falla el alta del perfil, intenta revertir únicamente el usuario recién creado. Las contraseñas las gestiona Supabase Auth y no se guardan en perfiles, respuestas ni logs de la aplicación.
+
+Cada miembro tiene **Mi espacio** y **En familia**. El administrador no puede consultar los registros privados ajenos a través de la aplicación. El propietario del proyecto Supabase conserva el acceso administrativo a su propia base de datos.
 
 ## Avisos
 
