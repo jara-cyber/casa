@@ -98,7 +98,7 @@ Para conectar Ollama, permite el origen exacto de la web con `OLLAMA_ORIGINS` y 
 
 ## Panel del propietario de la web
 
-Hay un panel independiente, **Administración web**, para consultar cuentas registradas, último inicio de sesión, confirmación de correo, familias y número de miembros. Tiene búsqueda y paginación de 25 registros. Es de solo lectura: no muestra contraseñas, tokens ni contenido de tareas o citas. Último inicio de sesión no equivale a presencia online ni a un historial de todos los accesos.
+Hay un panel independiente, **Administración web**, para consultar cuentas registradas, último inicio de sesión, confirmación de correo, familias y número de miembros. Tiene búsqueda y paginación de 25 registros. Permite consultar metadatos y eliminar cuentas o familias con confirmación. No muestra contraseñas, tokens ni contenido de tareas o citas. Último inicio de sesión no equivale a presencia online ni a un historial de todos los accesos.
 
 El administrador de una familia no obtiene este permiso. La autorización se guarda en `public.site_admins`, una tabla sin permisos de lectura o escritura para clientes. La función de consulta comprueba el ID autenticado contra esa tabla en cada petición. No usa emails del navegador ni metadatos editables para decidir el acceso. Un usuario no puede concederse el permiso desde la web.
 
@@ -117,3 +117,14 @@ El administrador de una familia no obtiene este permiso. La autorización se gua
 3. Recarga Casa. Aparecerá **Administración web**. También puedes usar `?panel=admin` al final de la dirección de Casa; la URL no concede el permiso.
 
 El SQL de activación debe ejecutarlo el propietario del proyecto Supabase desde su panel. La clave pública del frontend no permite hacer esta operación. No requiere compartir contraseñas ni claves de servidor.
+
+### Eliminar cuentas y familias desde el panel global
+
+El propietario dispone de «Eliminar cuenta» y «Eliminar familia». Las operaciones comprueban el permiso global en PostgreSQL y la confirmación escrita; no basta con ocultar botones. Son permanentes.
+
+- Eliminar una cuenta borra la cuenta y los registros que creó, tanto personales como compartidos. Si la familia queda vacía, también se elimina. Se impide borrar al único administrador familiar si aún quedan otros miembros.
+- Eliminar una familia borra esa familia, las cuentas de sus miembros, las invitaciones y sus datos personales y compartidos. El diálogo muestra ese alcance y exige escribir «ELIMINAR [nombre]». Si cambia el número de miembros, el servidor exige actualizar y volver a confirmar.
+- No se pueden borrar cuentas de propietarios ni familias que contengan una. La cuenta del propietario queda protegida frente al autoborrado.
+- Las operaciones se ejecutan en una transacción y retiran el perfil que da acceso a los datos. Un token previamente emitido puede seguir existiendo hasta caducar, pero no concede acceso a registros tras eliminar el perfil.
+
+La instalación del SQL solo crea las operaciones; no borra registros. El borrado ocurre únicamente al confirmar una acción desde el panel. Una nueva versión de `site-admin.sql` puede ejecutarse sobre la anterior para actualizar estas funciones.
