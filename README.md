@@ -95,3 +95,25 @@ El botón «Pregúntale a Casa» abre un chat. El modo predeterminado **Consulta
 En los ajustes del chat puedes seleccionar **IA local · Ollama**, indicar un modelo local instalado y su dirección loopback, por defecto `http://localhost:11434`. Solo al preguntar envía a ese servicio la pregunta y los registros relacionados visibles para tu cuenta; no envía correos, claves ni contraseñas. El historial no se guarda y se borra al cerrar la sesión. Si falla Ollama, se muestra la consulta directa, identificada como tal. Las respuestas del modelo pueden contener errores.
 
 Para conectar Ollama, permite el origen exacto de la web con `OLLAMA_ORIGINS` y activa `OLLAMA_NO_CLOUD=1`; reinicia Ollama y conserva la escucha en localhost. Configuración documentada: https://docs.ollama.com/faq. El navegador puede bloquear o pedir permiso para conexiones locales. En un móvil, localhost apunta al móvil, no a tu PC. La conexión real depende de tener Ollama y el modelo ejecutándose en ese dispositivo; no se ha verificado con tu ordenador.
+
+## Panel del propietario de la web
+
+Hay un panel independiente, **Administración web**, para consultar cuentas registradas, último inicio de sesión, confirmación de correo, familias y número de miembros. Tiene búsqueda y paginación de 25 registros. Es de solo lectura: no muestra contraseñas, tokens ni contenido de tareas o citas. Último inicio de sesión no equivale a presencia online ni a un historial de todos los accesos.
+
+El administrador de una familia no obtiene este permiso. La autorización se guarda en `public.site_admins`, una tabla sin permisos de lectura o escritura para clientes. La función de consulta comprueba el ID autenticado contra esa tabla en cada petición. No usa emails del navegador ni metadatos editables para decidir el acceso. Un usuario no puede concederse el permiso desde la web.
+
+### Activación, una sola vez desde SQL Editor
+
+1. Ejecuta `supabase/site-admin.sql` en el proyecto existente. No ejecutes de nuevo `schema.sql` ni borres tablas.
+2. Desde SQL Editor, concede acceso al correo de la cuenta propietaria ya registrada:
+
+   ```sql
+   insert into public.site_admins(user_id)
+   select id from auth.users where lower(email)=lower('TU_CORREO_DE_CASA')
+   on conflict do nothing;
+   ```
+
+   Sustituye el texto por tu correo real y comprueba que exista exactamente una cuenta. No se ha autorizado automáticamente ninguna dirección: tener acceso al repositorio o administrar una familia no prueba qué cuenta de Casa debe ser la propietaria.
+3. Recarga Casa. Aparecerá **Administración web**. También puedes usar `?panel=admin` al final de la dirección de Casa; la URL no concede el permiso.
+
+El SQL de activación debe ejecutarlo el propietario del proyecto Supabase desde su panel. La clave pública del frontend no permite hacer esta operación. No requiere compartir contraseñas ni claves de servidor.
