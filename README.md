@@ -1,62 +1,57 @@
 # Casa · En familia
 
-Panel familiar independiente de ChatGPT. Frontend React y Vite preparado para Render; cuentas con correo y contraseña y datos en Supabase. Incluye tareas, agenda, compras, menú semanal, gastos, enlaces, espacios personales y familiares, invitaciones y exportación de datos.
+Una sola web para la familia: GitHub Pages muestra el panel y Supabase gestiona, por detrás, los usuarios y los datos. Los familiares se registran e inician sesión en Casa; no necesitan una cuenta de la plataforma Supabase ni visitar su panel.
 
-## Estado de esta entrega
+Incluye resumen, tareas, agenda, lista de compra, menú, gastos, enlaces, espacio privado por cuenta y espacio familiar compartido. La primera persona que crea una familia es su administradora y puede invitar a los demás por correo y código.
 
-Código preparado para publicar. El repositorio de destino es `jara-cyber/casa`. Falta crear y configurar el proyecto Supabase; no se han migrado datos del sitio anterior. La versión alojada en ChatGPT sigue siendo independiente. El sitio de GitHub solo funcionará con datos reales al completar la configuración siguiente.
+## Estado
 
-## 1. Base de datos y cuentas (sin instalar complementos)
+Código preparado para GitHub Pages en `jara-cyber/casa`. La publicación requiere configurar un proyecto Supabase propio, sus reglas y dos variables públicas de GitHub. No hay una cuenta admin creada en un servidor todavía: se crea al registrar la primera cuenta y crear la familia. No hay credenciales predeterminadas en el código.
 
-1. En https://supabase.com/dashboard crea un proyecto con el plan Free, preferiblemente en una región europea. Conserva la contraseña de la base de datos en tu gestor; la web no la necesita.
-2. Abre SQL Editor, pega el contenido completo de `supabase/schema.sql` y ejecútalo una vez en ese proyecto nuevo.
-3. En Authentication activa el proveedor Email, el registro de usuarios y la confirmación del correo. Configura una longitud mínima de contraseña de 12 caracteres.
-4. En Authentication → URL Configuration, cuando tengas la URL publicada de GitHub Pages, úsala como Site URL y añádela a Redirect URLs. Incluye la ruta del repositorio y la barra final, por ejemplo `https://TU-USUARIO.github.io/casa/`.
-5. Copia Project URL y la clave **publishable** desde la configuración del proyecto. Son configuración pública del cliente. Nunca uses la clave `service_role`, una clave `sb_secret_...` ni la contraseña de PostgreSQL.
+La versión anterior en ChatGPT sigue siendo independiente. El archivo `render.yaml` se ha retirado: esta versión no necesita Render.
 
-Supabase gestiona contraseñas y sesiones; la aplicación no las almacena. Las políticas de PostgreSQL limitan cada consulta: un usuario solo ve registros de su familia y sus propios registros privados. Ni el administrador de la familia puede leer los privados ajenos a través de la aplicación. El propietario del proyecto Supabase conserva acceso administrativo a su base de datos.
+## Configuración inicial del propietario (una sola vez)
 
-## 2. Publicar en Render
+### 1. Proyecto Supabase Free
 
-El código está preparado para el repositorio privado `jara-cyber/casa`. No hace falta hacerlo público para esta opción.
+1. En https://supabase.com/dashboard crea un proyecto **Free**, preferiblemente en Europa. No hace falta instalar ningún complemento de ChatGPT.
+2. Abre SQL Editor, pega **todo** `supabase/schema.sql` y ejecútalo una vez en un proyecto nuevo. Crea tablas, permisos, invitaciones y reglas de privacidad.
+3. En Authentication → Providers → Email, activa el registro y la confirmación del correo. Configura una contraseña mínima de 12 caracteres.
+4. En Authentication → URL Configuration, usa la URL publicada de Casa como Site URL y añádela a Redirect URLs, con la ruta del repositorio y barra final. El formato esperado para este repositorio es `https://jara-cyber.github.io/casa/`; solo estará disponible cuando GitHub confirme la publicación.
+5. Copia **Project URL** y la clave **Publishable** (`sb_publishable_...`) de la configuración del proyecto. No uses `sb_secret_...`, `service_role` ni la contraseña PostgreSQL en la web.
 
-1. En https://dashboard.render.com elige New → Blueprint y conecta ese repositorio. Usa `render.yaml` de la rama `main`.
-2. El Blueprint declara un Static Site, sin servidor ni base de datos de pago en Render. Introduce `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` cuando Render las solicite.
-3. Publica y espera al estado Live. Render mostrará la URL real terminada en `.onrender.com`; no hay una URL reservada de antemano.
-4. Añade esa URL con barra final tanto a Site URL como a Redirect URLs en Supabase Authentication, en lugar del ejemplo de GitHub Pages de la sección anterior.
-5. Los cambios en `main` se volverán a publicar automáticamente. `npm test` y `npm run build` se ejecutan antes de publicar.
+### 2. GitHub Pages
 
-Si usas New → Static Site en lugar de Blueprint, configura:
+1. En GitHub Free, Pages requiere un repositorio público. Este repositorio actualmente se creó como privado: cambia su visibilidad desde Settings → General → Danger Zone si usas ese plan. El repositorio contiene código; los datos familiares se guardan en Supabase. Si tu plan admite Pages desde repositorios privados, puedes conservarlo privado.
+2. En Settings → Secrets and variables → Actions → **Variables**, añade:
+   - `VITE_SUPABASE_URL`: Project URL.
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`: clave pública `sb_publishable_...`.
+3. En Settings → Pages, selecciona **GitHub Actions** como Source.
+4. En Actions ejecuta **Publicar Casa en GitHub Pages**. El workflow comprueba configuración, pruebas y compilación antes de publicar. Los nuevos cambios en `main` se publicarán automáticamente.
+5. Abre la URL devuelta por el despliegue cuando termine correctamente. Sin las variables, el workflow se detiene con una explicación y no publica una pantalla incompleta.
 
-- Repositorio: `jara-cyber/casa`, rama `main`.
-- Build Command: `npm ci && npm test && npm run build`.
-- Publish Directory: `dist`.
-- Variables: `NODE_VERSION=22.22.0`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`.
+## Administrador y miembros
 
-Sin la configuración de Supabase, el sitio muestra una pantalla de configuración; no permite iniciar sesión ni acepta datos. Publicar esa pantalla no equivale a tener las cuentas activas.
+1. En Casa pulsa **Crear una cuenta**, introduce tu correo y una contraseña propia y confirma el correo recibido.
+2. Inicia sesión y crea tu familia. Esa cuenta obtiene el rol **Administrador** automáticamente.
+3. En Familia, introduce nombre y correo de un familiar. Se genera un código de un uso que caduca en 7 días.
+4. Comparte personalmente la URL de Casa y el código con ese familiar. No se envían invitaciones por email desde la app.
+5. El familiar crea su cuenta en Casa con ese mismo correo, lo confirma y pulsa **Tengo una invitación**.
+6. Cada persona elige **Mi espacio** o **En familia**. Al guardar una tarea o cita decide entre **Solo yo** y **Toda la familia**.
 
-## GitHub Pages como alternativa
+El administrador de la familia no recibe acceso a los registros privados ajenos a través de la app. Quien administra el proyecto Supabase sí mantiene acceso administrativo a su base de datos. Las contraseñas y sesiones las gestiona Supabase Auth.
 
-También puedes usar GitHub Pages. En GitHub Free necesitarías un repositorio público; no es necesario para Render. La configuración automática de esta entrega se dirige a Render.
+Todos pueden marcar tareas y productos compartidos como completados; solo quien creó el registro puede borrarlo. Las invitaciones están ligadas al correo confirmado de su destinatario. Un usuario no puede leer datos de otra familia.
 
-## 3. Primera entrada y familia
+## Avisos
 
-1. Crea tu cuenta en la web y confirma el correo.
-2. Inicia sesión y elige crear una familia: tu cuenta será la administradora.
-3. En Familia, escribe el nombre y correo de un familiar y crea la invitación.
-4. Comparte personalmente con él la URL de la web y el código generado. La aplicación no envía invitaciones por email.
-5. Esa persona crea su cuenta usando el mismo correo, lo confirma y elige «Tengo una invitación». El código es de un uso, caduca a los 7 días y solo sirve para ese correo.
-6. Cada miembro tiene «Mi espacio» y «En familia». Puede marcar tareas y productos compartidos como completados; solo el creador puede eliminar un registro.
+Activa los permisos en Avisos y ajustes. Los recordatorios del navegador se comprueban con la web abierta, con posibles retrasos si el navegador suspende la pestaña. No se ha implementado envío push con la web cerrada.
 
-## Recordatorios
+En Agenda, **Al calendario** exporta una cita `.ics` con alarma para recibir avisos desde el calendario del móvil. Comprueba que la aplicación conserve la alarma y tenga permiso de notificación. Los cambios y eliminaciones en Casa no se trasladan automáticamente al calendario.
 
-La app solicita permiso de notificaciones solo al pulsar el botón de activación. Los avisos se comprueban cada 30 segundos con la página abierta; un navegador suspendido puede retrasarlos. No existe todavía un servicio de envío push con la página cerrada.
+## Copias y migración
 
-Para avisos con la web cerrada, cada cita permite descargar un archivo `.ics` con alarma e importarlo en el calendario del móvil. Revisa que tu aplicación conserve la alarma y tenga permiso para notificar. Cambiar o borrar una cita aquí no modifica automáticamente una copia ya importada al calendario.
-
-## Datos anteriores
-
-La web exporta una copia JSON de los registros visibles. Exporta una copia JSON desde Avisos y ajustes de la versión ChatGPT y elige Importar una copia JSON en esta versión. Se añaden como personales para no compartirlos accidentalmente, sin borrar lo existente. No repitas la importación: duplicaría los registros. Máximo 500 registros por copia. Los datos locales antiguos solo pueden detectarse en su dominio original; un sitio de GitHub no puede leer el almacenamiento local de un sitio de ChatGPT.
+Exporta una copia JSON desde Avisos y ajustes de la versión anterior. En esta versión puedes importar esa copia: los registros se añaden como personales para no compartirlos por accidente. Máximo 500 registros por copia. Repetir una importación duplica los registros; no se borra lo existente. No hay migración automática entre servidores o dominios.
 
 ## Desarrollo
 
@@ -69,15 +64,16 @@ cp .env.example .env.local
 npm run dev
 ```
 
-`npm test` ejecuta las pruebas de permisos en PostgreSQL mediante PGlite. `npm run build` comprueba TypeScript y genera `dist/`. El despliegue también ejecuta ambas comprobaciones. Sin configuración de Supabase, la web muestra una pantalla de configuración; no acepta credenciales ni inventa datos.
+`npm test` comprueba permisos en PostgreSQL mediante PGlite: separación de familias, datos privados, invitaciones, acceso anónimo y operaciones compartidas. `npm run build` comprueba TypeScript y genera `dist/`.
 
-## Coste y límites
+Sin configuración local, la aplicación muestra una explicación y no acepta contraseñas. No se deben incluir secretos, contraseñas, copias de datos ni `.env.local` en GitHub.
 
-Se ha diseñado para un Static Site de Render y Supabase Free. No se ha contratado ni activado ningún plan de pago. Los límites y condiciones de ambos proveedores pueden cambiar. Supabase Free puede pausar el proyecto tras una semana de inactividad. El correo de confirmación y recuperación está sujeto a los límites del proveedor; para uso más amplio puede requerirse configurar SMTP.
+## Coste
 
-Documentación:
-- https://render.com/docs/static-sites
-- https://render.com/docs/blueprint-spec
+Preparado para GitHub Pages y Supabase Free, sin activar planes de pago. Ambos tienen límites. Supabase Free puede pausar el proyecto tras una semana de inactividad. El correo de confirmación y recuperación está sujeto a límites; para un uso más amplio podría requerir SMTP.
+
+Documentación oficial:
+- https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 - https://supabase.com/pricing
 - https://supabase.com/docs/guides/auth/passwords
 - https://supabase.com/docs/guides/database/postgres/row-level-security
