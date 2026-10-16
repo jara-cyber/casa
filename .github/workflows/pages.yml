@@ -20,7 +20,7 @@ jobs:
           node-version: '22'
           cache: npm
       - name: Comprobar configuración pública
-        run: node -e "const u=process.env.VITE_SUPABASE_URL,k=process.env.VITE_SUPABASE_PUBLISHABLE_KEY;if(!u||!k||!u.startsWith('https://')||!k.startsWith('sb_publishable_'))throw Error('Añade VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY en Settings > Secrets and variables > Actions > Variables')"
+        run: node scripts/check-config.mjs
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}

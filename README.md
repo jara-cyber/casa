@@ -6,7 +6,7 @@ Incluye resumen, tareas, agenda, lista de compra, menú, gastos, enlaces, espaci
 
 ## Estado
 
-Código preparado para GitHub Pages en `jara-cyber/casa`. La publicación requiere configurar un proyecto Supabase propio, sus reglas y dos variables públicas de GitHub. No hay una cuenta admin creada en un servidor todavía: se crea al registrar la primera cuenta y crear la familia. No hay credenciales predeterminadas en el código.
+Código preparado para GitHub Pages en `jara-cyber/casa`. El proyecto Supabase ya está enlazado mediante su URL y clave pública en `src/public-config.json`. Falta verificar que el SQL se ejecutó y activar GitHub Pages. No hay una cuenta admin creada en un servidor todavía: se crea al registrar la primera cuenta y crear la familia. No hay credenciales predeterminadas en el código.
 
 La versión anterior en ChatGPT sigue siendo independiente. El archivo `render.yaml` se ha retirado: esta versión no necesita Render.
 
@@ -23,12 +23,12 @@ La versión anterior en ChatGPT sigue siendo independiente. El archivo `render.y
 ### 2. GitHub Pages
 
 1. En GitHub Free, Pages requiere un repositorio público. Este repositorio actualmente se creó como privado: cambia su visibilidad desde Settings → General → Danger Zone si usas ese plan. El repositorio contiene código; los datos familiares se guardan en Supabase. Si tu plan admite Pages desde repositorios privados, puedes conservarlo privado.
-2. En Settings → Secrets and variables → Actions → **Variables**, añade:
+2. La URL y clave pública ya están en `src/public-config.json`; no hace falta crear variables en GitHub. Si quieres sustituir esa configuración, las siguientes variables opcionales tienen prioridad:
    - `VITE_SUPABASE_URL`: Project URL.
    - `VITE_SUPABASE_PUBLISHABLE_KEY`: clave pública `sb_publishable_...`.
 3. En Settings → Pages, selecciona **GitHub Actions** como Source.
 4. En Actions ejecuta **Publicar Casa en GitHub Pages**. El workflow comprueba configuración, pruebas y compilación antes de publicar. Los nuevos cambios en `main` se publicarán automáticamente.
-5. Abre la URL devuelta por el despliegue cuando termine correctamente. Sin las variables, el workflow se detiene con una explicación y no publica una pantalla incompleta.
+5. Abre la URL devuelta por el despliegue cuando termine correctamente. El workflow valida la configuración pública antes de compilar.
 
 ## Administrador y miembros
 
