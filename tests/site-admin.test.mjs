@@ -3,9 +3,9 @@ test('Administración global: autorización separada, metadatos mínimos y pagin
 await db.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key,email text,created_at timestamptz default now(),last_sign_in_at timestamptz,email_confirmed_at timestamptz);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('email',current_setting('request.jwt.claim.email',true))$$;grant usage on schema auth,public to authenticated,anon;grant execute on function auth.uid(),auth.jwt() to authenticated,anon;`);
 await db.exec(await readFile(new URL('../supabase/schema.sql',import.meta.url),'utf8'));await db.exec(await readFile(new URL('../supabase/site-admin.sql',import.meta.url),'utf8'));
 const owner='00000000-0000-4000-8000-000000000001',familyAdmin='00000000-0000-4000-8000-000000000002';
-await db.query("insert into auth.users(id,email,last_sign_in_at,email_confirmed_at) values($1,'owner@example.com',now(),now()),($2,'family@example.com',now(),now())",[owner,familyAdmin]);
+await db.query("insert into auth.users(id,email,last_sign_in_at,email_confirmed_at) values($1,'owner@example.com',now(),now()),($2,'famildelete-member-unique@example.net',now(),now())",[owner,familyAdmin]);
 const f=(await db.query("insert into public.families(name) values('Casa Uno') returning id")).rows[0].id;
-await db.query("insert into public.profiles(id,family_id,name,email,role) values($1,$3,'Propietario','owner@example.com','admin'),($2,$3,'Admin familiar','family@example.com','admin')",[owner,familyAdmin,f]);
+await db.query("insert into public.profiles(id,family_id,name,email,role) values($1,$3,'Propietario','owner@example.com','admin'),($2,$3,'Admin familiar','famildelete-member-unique@example.net','admin')",[owner,familyAdmin,f]);
 await db.query("insert into public.items(family_id,owner_id,scope,kind,text) values($1,$2,'private','task','DATO PRIVADO NO EXPONER')",[f,familyAdmin]);await db.query('insert into public.site_admins(user_id) values($1)',[owner]);
 await db.exec("insert into auth.users(id,email) select gen_random_uuid(),'person'||n||'@example.com' from generate_series(1,28) n");
 async function login(id){await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated')}
@@ -20,15 +20,15 @@ await assert.rejects(()=>db.query('select public.site_admin_delete_user($1,$2)',
 await assert.rejects(()=>db.query('select public.site_admin_delete_family($1,$2,$3)',[f,'ELIMINAR Casa Uno',2]),/propietaria/);
 await db.exec('reset role');
 const x='00000000-0000-4000-8000-000000000003',y='00000000-0000-4000-8000-000000000004';
-await db.query("insert into auth.users(id,email) values($1,'x@example.com'),($2,'y@example.com')",[x,y]);
+await db.query("insert into auth.users(id,email) values($1,'x@example.com'),($2,'delete-member-unique@example.net')",[x,y]);
 const f2=(await db.query("insert into public.families(name) values('Para borrar') returning id")).rows[0].id;
-await db.query("insert into public.profiles(id,family_id,name,email,role) values($1,$3,'X','x@example.com','admin'),($2,$3,'Y','y@example.com','member')",[x,y,f2]);
+await db.query("insert into public.profiles(id,family_id,name,email,role) values($1,$3,'X','x@example.com','admin'),($2,$3,'Y','delete-member-unique@example.net','member')",[x,y,f2]);
 await db.query("insert into public.items(family_id,owner_id,scope,kind,text) values($1,$2,'private','task','Borrar privado'),($1,$2,'family','shopping','Borrar compartido')",[f2,y]);
 await login(owner);
 await assert.rejects(()=>db.query('select public.site_admin_delete_user($1,$2)',[x,'x@example.com']),/único administrador/);
 await assert.rejects(()=>db.query('select public.site_admin_delete_user($1,$2)',[y,'otro@example.com']),/confirmación/);
-await db.query('select public.site_admin_delete_user($1,$2)',[y,'y@example.com']);
-let after=(await db.query("select public.site_admin_overview('users','y@example.com',1) as data")).rows[0].data;assert.equal(after.total,0);
+await db.query('select public.site_admin_delete_user($1,$2)',[y,'delete-member-unique@example.net']);
+let after=(await db.query("select public.site_admin_overview('users','delete-member-unique@example.net',1) as data")).rows[0].data;assert.equal(after.total,0);
 await assert.rejects(()=>db.query('select public.site_admin_delete_family($1,$2,$3)',[f2,'ELIMINAR Para borrar',2]),/miembros han cambiado/);
 await assert.rejects(()=>db.query('select public.site_admin_delete_family($1,$2,$3)',[f2,'confirmación errónea',1]),/confirmación/);
 await db.query('select public.site_admin_delete_family($1,$2,$3)',[f2,'ELIMINAR Para borrar',1]);
