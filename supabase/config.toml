@@ -1,4 +1,0 @@
-project_id = "djvvptophxqwqcadkahj"
-[functions.create-member]
-# El handler verifica el JWT del usuario con Auth y su rol en la base de datos.
-verify_jwt = false
