@@ -29,7 +29,7 @@ Deno.serve(async(req)=>{
  if(input.action==='dispatch'){
   if(token!==config.dispatch_token)return response({error:'No autorizado'},403);
   const {data,error}=await db.rpc('claim_push');if(error)throw error;
-  rows=(data||[]).map(row=>({...row,queue:'push_deliveries'}));
+  rows=(data||[]).map((row:any)=>({...row,queue:'push_deliveries'}));
   const activity=await db.rpc('claim_activity_push');
   // Compatibilidad durante la actualización: los recordatorios siguen funcionando
   // si la migración de actividad todavía no está instalada.
