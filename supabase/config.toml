@@ -1,0 +1,2 @@
+[functions.casa-push]
+verify_jwt = false
