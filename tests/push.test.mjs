@@ -41,7 +41,7 @@ test('Push: destinatarios privados, familias, arrendamientos y borrados',async()
  await db.query('update push_deliveries set sent_at=now() where id=$1',[rows[0].delivery_id]);
  await db.exec("update push_deliveries set leased_until=now()-interval '1 minute'");
  assert.equal((await db.query('select * from claim_push()')).rows.length,2);
- await db.exec("update items set done=true;update push_deliveries set leased_until=now()-interval '1 minute'");
+ await db.exec("reset role;update items set done=true;update push_deliveries set leased_until=now()-interval '1 minute'");
  assert.equal((await db.query('select * from claim_push()')).rows.length,0);
  await db.exec('reset role;delete from items');assert.equal((await db.query('select * from push_deliveries')).rows.length,0);
  }finally{await db.close()}

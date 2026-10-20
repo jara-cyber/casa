@@ -35,8 +35,16 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+  check-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno check --no-lock supabase/functions/casa-push/index.ts
   deploy:
-    needs: build
+    needs: [build, check-push]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
