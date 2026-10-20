@@ -19,7 +19,7 @@ export default function PushSettings({owner}:{owner:boolean}){
    if(sub){const {data}=await supabase!.from('push_subscriptions').select('id').eq('endpoint',sub.endpoint);setActive(!!data?.length)}else setActive(false)}
  }
  useEffect(()=>{refresh().catch(()=>setMessage('No se pudo comprobar el estado de los avisos.'))},[]);
- async function invoke(body:unknown){
+ async function invoke(body:Record<string,unknown>){
   const {data,error}=await supabase!.functions.invoke('casa-push',{body});
   if(error||data?.error)throw Error(data?.error||'No se pudo contactar con el envío push. Comprueba que casa-push esté desplegada y configurada.');
   return data;
