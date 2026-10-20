@@ -28,7 +28,13 @@ Deno.serve(async(req)=>{
  let rows:any[];
  if(input.action==='dispatch'){
   if(token!==config.dispatch_token)return response({error:'No autorizado'},403);
-  const {data,error}=await db.rpc('claim_push');if(error)throw error;rows=data||[];
+  const {data,error}=await db.rpc('claim_push');if(error)throw error;
+  rows=(data||[]).map(row=>({...row,queue:'push_deliveries'}));
+  const activity=await db.rpc('claim_activity_push');
+  // Compatibilidad durante la actualización: los recordatorios siguen funcionando
+  // si la migración de actividad todavía no está instalada.
+  if(activity.error&&activity.error.code!=='PGRST202')throw activity.error;
+  rows.push(...(activity.data||[]).map((row:any)=>({...row,queue:'push_activity_deliveries'})));
   await db.from('push_config').update({last_dispatch:new Date().toISOString()}).eq('id',true);
  }else if(input.action==='test'){
   const {data:{user},error}=await db.auth.getUser(token);if(error||!user)return response({error:'Inicia sesión'},401);
@@ -38,17 +44,17 @@ Deno.serve(async(req)=>{
  }else return response({error:'Acción no válida'},400);
  webpush.setVapidDetails(config.contact,config.public_key,config.private_key);
  let sent=0;
- for(const row of rows){
-  if(!allowed(row.endpoint))continue;
+ await Promise.all(rows.map(async row=>{
+  if(!allowed(row.endpoint))return;
   try{
-   await webpush.sendNotification({endpoint:row.endpoint,keys:{p256dh:row.p256dh,auth:row.auth}},JSON.stringify({title:'Casa',body:input.action==='test'?'Los avisos están preparados en este dispositivo.':'Tienes un recordatorio de agenda. Abre Casa para ver los detalles.',tag:row.delivery_id||'casa-test'}),{TTL:300,timeout:8000,urgency:'normal'});
+   await webpush.sendNotification({endpoint:row.endpoint,keys:{p256dh:row.p256dh,auth:row.auth}},JSON.stringify({title:'Casa',body:row.body||(input.action==='test'?'Los avisos están preparados en este dispositivo.':'Tienes un recordatorio de agenda. Abre Casa para ver los detalles.'),tag:row.delivery_id||'casa-test'}),{TTL:300,timeout:8000,urgency:'normal'});
    sent++;
-   if(row.delivery_id){const {error}=await db.from('push_deliveries').update({sent_at:new Date().toISOString()}).eq('id',row.delivery_id);if(error)throw error}
+   if(row.delivery_id){const {error}=await db.from(row.queue==='push_activity_deliveries'?'push_activity_deliveries':'push_deliveries').update({sent_at:new Date().toISOString()}).eq('id',row.delivery_id);if(error)throw error}
   }catch(e){const status=(e as {statusCode?:number}).statusCode;
    if(status===404||status===410)await db.from('push_subscriptions').delete().eq('endpoint',row.endpoint);
    // Otros errores se reintentan tras el arrendamiento; no se registran endpoints ni secretos.
   }
- }
+ }));
  return response({ok:true,sent});
  }catch{return response({error:'No se pudo completar el envío. Revisa la instalación de casa-push en Supabase.'},500)}
 });

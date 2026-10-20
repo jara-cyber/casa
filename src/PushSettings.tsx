@@ -53,8 +53,8 @@ export default function PushSettings({owner}:{owner:boolean}){
   setActive(true);setMessage('Avisos activados en este dispositivo. Puedes cerrar Casa.');
  }
  return <section className="card"><h2>Avisos con Casa cerrada</h2>
- <p>Recibe los recordatorios de tus citas y de las citas compartidas, con la antelación elegida en Agenda.</p>
- <div className="notice">Por privacidad, el aviso solo indica que tienes un recordatorio. Abre Casa para consultar sus detalles.</div>
+ <p>Recibe los recordatorios de agenda y los avisos cuando alguien añada una tarea, cita, compra, plato, gasto o enlace compartido en tu familia.</p>
+ <div className="notice">Los nuevos registros compartidos indican su tipo y quién los ha creado, por ejemplo «Nueva tarea de Ana». El contenido se consulta dentro de Casa. Lo marcado como «Solo yo» no se notifica a otros miembros.</div>
  {ios&&!installed()&&<p><strong>En iPhone o iPad:</strong> abre Casa en Safari, pulsa Compartir → Añadir a pantalla de inicio y entra desde su icono para activar los avisos.</p>}
  {!supported&&<p>Este navegador no permite avisos push en su estado actual. En iPhone, instala primero Casa en la pantalla de inicio.</p>}
  <p>Servidor: <strong>{status.publicKey?'Configurado':'Pendiente de configurar'}</strong> · Este dispositivo: <strong>{active?'Activado':'Sin activar'}</strong></p>

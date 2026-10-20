@@ -28,7 +28,11 @@ Crea una cita para dentro de unos minutos, elige “A la hora”, cierra Casa y 
 En ajustes, “Última comprobación del servidor” debe actualizarse después de activar el cron. Compruébalo tras unos minutos.
 
 ## Comportamiento
-- Se envían recordatorios de Agenda. Todavía no hay avisos instantáneos de compras ni tareas.
+- Se envían recordatorios de Agenda y, tras instalar push-activity.sql y actualizar casa-push, avisos por cada nuevo registro compartido (tarea, cita, compra, menú, gasto, enlace).
+- Todos los dispositivos suscritos de la familia en el momento de la creación reciben el aviso, incluido quien lo creó. Ninguna otra familia lo recibe.
+- Los avisos de actividad dicen el tipo de registro y el nombre del autor, sin incluir texto, importes, enlaces ni detalles de citas. Los registros privados no generan avisos de actividad a la familia.
+- Al insertar se solicita un envío asíncrono; el cron existente reintenta los pendientes. No se garantiza una entrega instantánea.
+- La migración no envía avisos de registros anteriores. Eliminar un registro cancela sus avisos pendientes.
 - Citas familiares: cada dispositivo suscrito de los miembros actuales de esa familia. Privadas: solo dispositivos del propietario de la cita.
 - La fecha de la cita se guarda en UTC desde la hora local elegida; el envío no depende de la zona horaria del servidor.
 - Se revisa cada minuto. Reintentos de fallos temporales hasta cinco veces, con cinco minutos de espera. Suscripciones caducadas (404/410) se eliminan.
@@ -43,3 +47,10 @@ En ajustes, “Última comprobación del servidor” debe actualizarse después 
 
 ## Validación
 GitHub Actions ejecuta las pruebas de PostgreSQL sobre privacidad, destinatarios, reintentos y deduplicación y compila el frontend. El despliegue de Pages no instala la migración ni la función en Supabase.
+
+## Actualizar un proyecto que ya tiene avisos funcionando
+1. Copia supabase/push-activity.sql en SQL Editor y ejecuta Run. Es adicional: no reemplaza la configuración anterior ni cambia las claves.
+2. En Edge Functions → casa-push → index.ts sustituye TODO el código por la versión actual de supabase/functions/casa-push/index.ts y vuelve a desplegar. Conserva su configuración de verificación JWT.
+3. No necesitas volver a activar las suscripciones de los móviles.
+4. Crea una tarea “Toda la familia” y comprueba el aviso en los dispositivos activados. Crea otra “Solo yo” y verifica que no se notifica a los demás.
+5. Si ya tenías el fallo de entrega de la prueba, esta mejora no sustituye el diagnóstico de ese fallo.
