@@ -54,3 +54,12 @@ GitHub Actions ejecuta las pruebas de PostgreSQL sobre privacidad, destinatarios
 3. No necesitas volver a activar las suscripciones de los móviles.
 4. Crea una tarea “Toda la familia” y comprueba el aviso en los dispositivos activados. Crea otra “Solo yo” y verifica que no se notifica a los demás.
 5. Si ya tenías el fallo de entrega de la prueba, esta mejora no sustituye el diagnóstico de ese fallo.
+
+## Avisos de reacciones
+Ejecuta supabase/reaction-notifications.sql en SQL Editor. Requiere push.sql ya instalado e incluye las migraciones de tareas y actividad, por lo que no necesitas ejecutarlas por separado.
+Reutiliza la versión de casa-push que ya procesa claim_activity_push y row.body. Si ya actualizaste la función para los nuevos registros compartidos, no debes volver a desplegarla.
+Al añadir o cambiar una reacción se solicita un envío inmediato asíncrono. El cron existente reintenta los fallos temporales.
+Se avisa a los dispositivos suscritos de la familia, incluido el de quien reacciona. Nunca a otras familias.
+El aviso solo muestra el nombre de quien reacciona y “Visto”, “Perfecto” o “Lo hago yo”, sin el texto de la tarea.
+Quitar una reacción no envía un aviso. Si se quita o cambia antes del envío, las notificaciones pendientes de la versión anterior se descartan. Un aviso ya entregado no se puede retirar.
+No se envían avisos de reacciones existentes antes de instalar la actualización.
