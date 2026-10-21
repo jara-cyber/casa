@@ -8,3 +8,10 @@
 @media(max-width:600px){.casa-calendar{padding:14px}.calendar-toolbar{align-items:flex-start;flex-wrap:wrap}.calendar-toolbar h2{font-size:19px}.calendar-toolbar p{max-width:220px}.calendar-days,.calendar-weekdays{gap:3px}.calendar-day{min-height:65px;padding:5px 2px;gap:5px}.calendar-number{width:25px;height:25px;font-size:12px}.calendar-previews{display:none}.calendar-mobile-count{display:block;font-size:9px;text-align:center;color:#537148}.calendar-day.outside .calendar-mobile-count{color:#929a87}.calendar-detail .row .content{min-width:120px}.tabs{max-width:100%;flex-wrap:wrap}.tabs button{font-size:12px;padding:9px 10px}}
 
 .task-reactions{margin:0 0 16px 30px;padding:5px 0 10px}.reaction-actions{display:flex;flex-wrap:wrap;gap:7px}.reaction-button{background:#f2f5ed;color:#526b45;border:1px solid #e0e8d8;border-radius:20px;padding:6px 11px;font-size:11px;display:inline-flex;align-items:center;gap:5px}.reaction-button.selected{background:#dfeeda;color:#315c3b;border-color:#7ca16c;font-weight:650}.reaction-button:focus-visible{outline:2px solid #406c91;outline-offset:2px}.reaction-count{background:#ffffffb3;border-radius:10px;padding:1px 5px;font-size:10px}.reaction-people{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;font-size:10px;color:#6e7c62}.reaction-people>span{background:#f7f8f4;border-radius:6px;padding:4px 7px}.reaction-button:disabled{cursor:wait}@media(max-width:520px){.task-reactions{margin-left:0}.reaction-button{padding:7px 10px;font-size:11px}}
+
+/* Evita el zoom de enfoque de iOS y el doble toque accidental; conserva el pellizco para ampliar. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,a,input,select,textarea,label{touch-action:manipulation}
+@media(max-width:1024px),(pointer:coarse){
+ input,select,textarea,.formgrid input,.formgrid select,.authcard input,.chat-form input,.chat-settings input,.chat-settings select,.site-admin-controls input{font-size:16px}
+}
