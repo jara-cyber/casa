@@ -42,12 +42,24 @@ Deno.serve(async(req)=>{
   if(se)throw se;rows=data||[];
   if(!rows.length)return response({error:'Activa los avisos y espera un minuto entre pruebas'},400);
  }else return response({error:'Acción no válida'},400);
+ // Resolver el registro asociado sin modificar las funciones SQL instaladas.
+ // Las tablas solo son accesibles desde el servidor; el navegador volverá a comprobar RLS.
+ if(input.action==='dispatch'){
+  for(const queue of ['push_deliveries','push_activity_deliveries']){
+   const ids=rows.filter(row=>row.queue===queue).map(row=>row.delivery_id);
+   if(!ids.length)continue;
+   const {data,error}=await db.from(queue).select('id,item_id').in('id',ids);
+   if(error)throw error;
+   const targets=new Map((data||[]).map(row=>[row.id,row.item_id]));
+   for(const row of rows)if(row.queue===queue)row.itemId=targets.get(row.delivery_id);
+  }
+ }
  webpush.setVapidDetails(config.contact,config.public_key,config.private_key);
  let sent=0;
  await Promise.all(rows.map(async row=>{
   if(!allowed(row.endpoint))return;
   try{
-   await webpush.sendNotification({endpoint:row.endpoint,keys:{p256dh:row.p256dh,auth:row.auth}},JSON.stringify({title:'Casa',body:row.body||(input.action==='test'?'Los avisos están preparados en este dispositivo.':'Tienes un recordatorio de agenda. Abre Casa para ver los detalles.'),tag:row.delivery_id||'casa-test'}),{TTL:300,timeout:8000,urgency:'normal'});
+   await webpush.sendNotification({endpoint:row.endpoint,keys:{p256dh:row.p256dh,auth:row.auth}},JSON.stringify({title:'Casa',body:row.body||(input.action==='test'?'Los avisos están preparados en este dispositivo.':'Tienes un recordatorio de agenda. Abre Casa para ver los detalles.'),tag:row.delivery_id||'casa-test',itemId:row.itemId||null}),{TTL:300,timeout:8000,urgency:'normal'});
    sent++;
    if(row.delivery_id){const {error}=await db.from(row.queue==='push_activity_deliveries'?'push_activity_deliveries':'push_deliveries').update({sent_at:new Date().toISOString()}).eq('id',row.delivery_id);if(error)throw error}
   }catch(e){const status=(e as {statusCode?:number}).statusCode;

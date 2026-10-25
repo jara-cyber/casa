@@ -63,3 +63,15 @@ Se avisa a los dispositivos suscritos de la familia, incluido el de quien reacci
 El aviso solo muestra el nombre de quien reacciona y “Visto”, “Perfecto” o “Lo hago yo”, sin el texto de la tarea.
 Quitar una reacción no envía un aviso. Si se quita o cambia antes del envío, las notificaciones pendientes de la versión anterior se descartan. Un aviso ya entregado no se puede retirar.
 No se envían avisos de reacciones existentes antes de instalar la actualización.
+
+## Abrir el registro al tocar una notificación
+La versión actual de la web abre el evento, tarea u otro registro que originó el aviso.
+Actualiza Edge Functions → casa-push → index.ts con TODO el contenido actual de supabase/functions/casa-push/index.ts y pulsa Deploy.
+No hace falta ejecutar SQL ni cambiar las claves o las suscripciones.
+Después abre Casa una vez para actualizar su receptor de notificaciones.
+Prueba con una notificación NUEVA: los avisos recibidos antes de actualizar la función no llevan el identificador del registro.
+Si Casa ya está abierta, se reutiliza su ventana y se navega al registro.
+Si debes iniciar sesión, el identificador se conserva en la dirección para mostrar el detalle al entrar.
+Las citas pasadas se abren con su detalle aunque ya no aparezcan en Agenda.
+El identificador no concede acceso: Casa consulta los datos autorizados por la sesión y las políticas RLS. Si el registro fue eliminado o la cuenta no puede verlo, muestra un aviso sin revelar sus detalles.
+La notificación de prueba abre Inicio, porque no corresponde a ningún registro.
